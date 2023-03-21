@@ -1,0 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500&display=swap');
+
+.font-ubuntu {
+    font-family: 'Ubuntu';
+}
+
+.custom-sidebar {
+    min-width: 250px;
+    width: 250px;
+    max-width: 250px;
+}
+
