@@ -94,7 +94,7 @@ class API extends BaseController
 
                 if ($employee = $this->employeeModel->find($uid)) {
                     $today = strtotime(date('Y-m-d'));
-                    if ($employee['name'] != "n/a" && $employee['name'] != "n/a") {
+                    if ($employee['name'] != "n/a" && $employee['position'] != "n/a") {
                         if ($this->attendanceModel->where("employee_uid = '$uid' AND created_at >= '$today'")->find()) {
                             $data = [
                                 "success" => true,
@@ -136,7 +136,7 @@ class API extends BaseController
                                 return $this->respond($data, 500);
                             }
                         }
-                    }else{
+                    } else {
                         $data = [
                             "success" => false,
                             "status" => "406 Not Acceptable",
