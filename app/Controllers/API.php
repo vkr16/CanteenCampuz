@@ -94,28 +94,12 @@ class API extends BaseController
 
                 if ($employee = $this->employeeModel->find($uid)) {
                     $today = strtotime(date('Y-m-d'));
-                    if ($this->attendanceModel->where("employee_uid = '$uid' AND created_at >= '$today'")->find()) {
-                        $data = [
-                            "success" => true,
-                            "status" => "200 Ok",
-                            "message" => "Today's attendance record has been previously recorded",
-                            "data" => [
-                                "uid" => $uid,
-                                "employee_name" => $employee['name'],
-                                "employee_position" => $employee['position']
-                            ]
-                        ];
-
-                        return $this->respond($data, 200);
-                    } else {
-                        $attendanceRecord = [
-                            "employee_uid" => $uid
-                        ];
-                        if ($this->attendanceModel->insert($attendanceRecord)) {
+                    if ($employee['name'] != "n/a" && $employee['name'] != "n/a") {
+                        if ($this->attendanceModel->where("employee_uid = '$uid' AND created_at >= '$today'")->find()) {
                             $data = [
                                 "success" => true,
-                                "status" => "201 Created",
-                                "message" => "Attendance has been recorded successfully",
+                                "status" => "200 Ok",
+                                "message" => "Today's attendance record has been previously recorded",
                                 "data" => [
                                     "uid" => $uid,
                                     "employee_name" => $employee['name'],
@@ -123,17 +107,46 @@ class API extends BaseController
                                 ]
                             ];
 
-                            return $this->respond($data, 201);
+                            return $this->respond($data, 200);
                         } else {
-                            $data = [
-                                "success" => false,
-                                "status" => "500 Internal Server Error",
-                                "message" => "Internal server error, please try again or contact your administrator",
-                                "data" => []
+                            $attendanceRecord = [
+                                "employee_uid" => $uid
                             ];
+                            if ($this->attendanceModel->insert($attendanceRecord)) {
+                                $data = [
+                                    "success" => true,
+                                    "status" => "201 Created",
+                                    "message" => "Attendance has been recorded successfully",
+                                    "data" => [
+                                        "uid" => $uid,
+                                        "employee_name" => $employee['name'],
+                                        "employee_position" => $employee['position']
+                                    ]
+                                ];
 
-                            return $this->respond($data, 500);
+                                return $this->respond($data, 201);
+                            } else {
+                                $data = [
+                                    "success" => false,
+                                    "status" => "500 Internal Server Error",
+                                    "message" => "Internal server error, please try again or contact your administrator",
+                                    "data" => []
+                                ];
+
+                                return $this->respond($data, 500);
+                            }
                         }
+                    }else{
+                        $data = [
+                            "success" => false,
+                            "status" => "406 Not Acceptable",
+                            "message" => "This uid is registered but not yet associated with any employee name",
+                            "data" => [
+                                "uid" => $uid
+                            ]
+                        ];
+
+                        return $this->respond($data, 406);
                     }
                 } else {
                     $data = [
