@@ -47,10 +47,14 @@ $routes->get('/apanel/summary/get', 'Main::getSummary');
 $routes->post('/apanel/attendance/plusovertime', 'Main::plusovertime');
 $routes->post('/apanel/attendance/minusovertime', 'Main::minusovertime');
 $routes->post('/apanel/changepassword', 'Main::changePassword');
+$routes->post('/apanel/changemaster', 'Main::changeMaster');
 
 
 
 // API Endpoints
+// Endpoint Master Tag
+$routes->post('/api/v1/mastertag', 'API::getMasterTag');
+
 // Endpoint Register 
 $routes->post('/api/v1/register', 'API::register');
 

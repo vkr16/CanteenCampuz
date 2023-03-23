@@ -350,4 +350,19 @@ class Main extends BaseController
             return "401";
         }
     }
+
+    public function changeMaster()
+    {
+        $uid = $_POST['uid'];
+
+        if ($this->adminModel->where("id", "1")->find()) {
+            if ($this->adminModel->where("id", "1")->set(["master_tag" => $uid])->update()) {
+                return "200";
+            } else {
+                return "500";
+            }
+        } else {
+            return "404";
+        }
+    }
 }

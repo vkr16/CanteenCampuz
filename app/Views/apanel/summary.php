@@ -54,6 +54,10 @@
     <script src="<?= base_url('public/assets/library/datatables-1.12.1/datatables.min.js') ?>"></script>
 
     <script>
+        $(document).ready(() => {
+            getMasterTag();
+        })
+
         $("#sidebar_summary").addClass("active text-white");
 
         Notiflix.Notify.init({

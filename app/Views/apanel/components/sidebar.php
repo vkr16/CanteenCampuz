@@ -31,6 +31,7 @@
                 <p class="mb-0"><?= $_SESSION['apanel_session'] ?></p>
             </span>
             <ul class="dropdown-menu">
+                <li><a role="button" class="dropdown-item" onclick="changeMasterTag()">Change Master Tag</a></li>
                 <li><a role="button" class="dropdown-item" onclick="changePassModal()">Change Password</a></li>
             </ul>
         </div>
@@ -39,8 +40,7 @@
 
 
 
-
-<!-- Modal -->
+<!-- Modal Change Password -->
 <div class="modal fade" id="changePassModal" tabindex="-1" aria-labelledby="changePassModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content rounded-0">
@@ -70,7 +70,38 @@
     </div>
 </div>
 
+<!-- Modal Change Master Tag -->
+<div class="modal fade" id="changeMasterTag" tabindex="-1" aria-labelledby="changeMasterTagLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-0">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="changeMasterTagLabel">Change Master Tag</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="masterTag" class="form-label">Master Tag UID</label>
+                    <input type="text" class="form-control rounded-0" id="masterTag">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-0" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary rounded-0" onclick="submitMasterTag()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    function getMasterTag() {
+        $.post("<?= base_url('api/v1/mastertag') ?>", {
+                api_key: '<?= $_ENV['API_KEY'] ?>'
+            })
+            .done((data) => {
+                $('#masterTag').val(data["data"]["uid"]);
+            })
+    }
+
     function changePassModal() {
         $('#changePassModal').modal('show');
     }
@@ -99,5 +130,32 @@
                     }
                 })
         }
+    }
+
+    function submitMasterTag() {
+        const newTag = $("#masterTag").val();
+
+        if (newTag == "") {
+            Notiflix.Notify.failure("Master tag uid is required");
+        } else {
+            $.post("<?= base_url('apanel/changemaster') ?>", {
+                    uid: newTag,
+                })
+                .done((data) => {
+                    if (data == "200") {
+                        $('#changeMasterTag').modal('hide');
+
+                        Notiflix.Notify.success("Master tag changed successfully");
+                    } else if (data == "404") {
+                        Notiflix.Notify.failure("Admin account not found");
+                    } else if (data == "500") {
+                        Notiflix.Notify.failure("Internal Server Error");
+                    }
+                })
+        }
+    }
+
+    function changeMasterTag() {
+        $("#changeMasterTag").modal("show");
     }
 </script>

@@ -19,6 +19,44 @@ class API extends BaseController
         $this->attendanceModel = model('AttendanceModel', true, $db);
     }
 
+    public function getMasterTag()
+    {
+        if (isset($_POST['api_key']) && $_POST['api_key'] == $_ENV['API_KEY']) {
+            if ($admin = $this->adminModel->where("id", "1")->find()) {
+                $master_tag = $admin[0]['master_tag'];
+                $data = [
+                    "success" => true,
+                    "status" => "200 OK",
+                    "message" => "Successfully get master tag information",
+                    "data" => [
+                        "admin" => $admin[0]['username'],
+                        "uid" => $master_tag
+                    ]
+                ];
+
+                return $this->respond($data, 200);
+            } else {
+                $data = [
+                    "success" => false,
+                    "status" => "404 Not Found",
+                    "message" => "Admin account not found",
+                    "data" => []
+                ];
+
+                return $this->respond($data, 404);
+            }
+        } else {
+            $data = [
+                "success" => false,
+                "status" => "401 Unauthorized",
+                "message" => "Unauthorized, Invalid API key",
+                "data" => []
+            ];
+
+            return $this->respond($data, 401);
+        }
+    }
+
     public function register()
     {
         if (isset($_POST['api_key']) && $_POST['api_key'] == $_ENV['API_KEY']) {
