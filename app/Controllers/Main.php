@@ -281,6 +281,17 @@ class Main extends BaseController
         }
 
         $exceldata = array_merge(array($datesArray), $records);
+        $legend = [
+            [],
+            [],
+            [],
+            ['<center><style border="#000" color="#ffffff" bgcolor="#000000" ><strong>Legend</strong></style></center>'],
+            ['<center><style border="#000" bgcolor="#C6E0B4">Normal Shift</style></center>'],
+            ['<center><style border="#000" bgcolor="#B4C6E7">Overtime</style></center>'],
+            ['<center><style border="#000" bgcolor="#F8CBAD">Absent</style></center>'],
+            ['<center><style border="#000" bgcolor="#FFE699">Not Registered</style></center>'],
+        ];
+        $exceldata = array_merge($exceldata, $legend);
         include('SimpleXLSXGen.php');
         $xlsx = SimpleXLSXGen::fromArray($exceldata);
         $xlsx->downloadAs("summary" . '.xlsx');
