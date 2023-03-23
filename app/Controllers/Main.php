@@ -96,6 +96,7 @@ class Main extends BaseController
                         "name" => $employee['name'],
                         "position" => $employee['position'],
                         "attendance_time" => date("H : i : s A", $attendance['created_at']),
+                        "overtime" => $attendance['overtime'],
                     ];
                 } else {
                     $attendanceData = [
@@ -282,5 +283,41 @@ class Main extends BaseController
         $xlsx = SimpleXLSXGen::fromArray($exceldata);
         $xlsx->downloadAs("summary" . '.xlsx');
         exit;
+    }
+
+    public function plusovertime()
+    {
+        $attendance_id = $_POST['attendance_id'];
+        $currentOT = $_POST['current_ot'];
+
+        if ($this->attendanceModel->where("id", $attendance_id)->find()) {
+            if ($this->attendanceModel->where("id", $attendance_id)->set(["overtime" => $currentOT + 1])->update()) {
+                return "200";
+            } else {
+                return "500";
+            }
+        } else {
+            return "404";
+        }
+    }
+
+    public function minusovertime()
+    {
+        $attendance_id = $_POST['attendance_id'];
+        $currentOT = $_POST['current_ot'];
+
+        if ($this->attendanceModel->where("id", $attendance_id)->find()) {
+            if ($currentOT - 1 >= 0) {
+                if ($this->attendanceModel->where("id", $attendance_id)->set(["overtime" => $currentOT - 1])->update()) {
+                    return "200";
+                } else {
+                    return "500";
+                }
+            } else {
+                return "400";
+            }
+        } else {
+            return "404";
+        }
     }
 }

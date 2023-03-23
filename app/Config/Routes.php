@@ -44,6 +44,8 @@ $routes->post('/apanel/attendance/present', 'Main::attendantPresent');
 $routes->post('/apanel/attendance/absent', 'Main::attendantAbsent');
 $routes->get('/apanel/summary', 'Main::summary');
 $routes->get('/apanel/summary/get', 'Main::getSummary');
+$routes->post('/apanel/attendance/plusovertime', 'Main::plusovertime');
+$routes->post('/apanel/attendance/minusovertime', 'Main::minusovertime');
 
 
 // API Endpoints

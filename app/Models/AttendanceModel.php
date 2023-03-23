@@ -14,7 +14,7 @@ class AttendanceModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['id', 'employee_uid'];
+    protected $allowedFields    = ['id', 'employee_uid', 'overtime', 'notes'];
 
     // Dates
     protected $useTimestamps = true;
