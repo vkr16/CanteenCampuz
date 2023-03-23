@@ -46,6 +46,8 @@ $routes->get('/apanel/summary', 'Main::summary');
 $routes->get('/apanel/summary/get', 'Main::getSummary');
 $routes->post('/apanel/attendance/plusovertime', 'Main::plusovertime');
 $routes->post('/apanel/attendance/minusovertime', 'Main::minusovertime');
+$routes->post('/apanel/changepassword', 'Main::changePassword');
+
 
 
 // API Endpoints

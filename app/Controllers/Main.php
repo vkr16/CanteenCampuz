@@ -263,13 +263,15 @@ class Main extends BaseController
                 $dateA = $from + (86400 * $day);
                 $dateB = $from + (86400 * ($day + 1));
 
-                if ($attendance = $this->attendanceModel->where("employee_uid = '$employee_uid' AND created_at >= '$dateA' AND created_at < '$dateB'")->find()) {
-                    $record = '<center><style border="#000" bgcolor="#C6E0B4">O</style></center>';
+                if ($attendance = $this->attendanceModel->where("employee_uid = '$employee_uid' AND created_at >= '$dateA' AND created_at < '$dateB' AND overtime = 0")->find()) {
+                    $record = '<center><style border="#000" bgcolor="#C6E0B4">1</style></center>';
+                } else if ($attendance = $this->attendanceModel->where("employee_uid = '$employee_uid' AND created_at >= '$dateA' AND created_at < '$dateB' AND overtime > 0")->find()) {
+                    $record = '<center><style border="#000" bgcolor="#B4C6E7">' . $attendance[0]['overtime'] + 1 . '</style></center>';
                 } else {
                     if ($dateB < $employee_created_at) {
                         $record = '<center><style border="#000" bgcolor="#FFE699">--</style></center>';
                     } else {
-                        $record = '<center><style border="#000" bgcolor="#F8CBAD">X</style></center>';
+                        $record = '<center><style border="#000" bgcolor="#F8CBAD">0</style></center>';
                     }
                 }
 
@@ -318,6 +320,23 @@ class Main extends BaseController
             }
         } else {
             return "404";
+        }
+    }
+
+    public function changePassword()
+    {
+        $currentPassword = $_POST['currentPass'];
+        $newPassword = password_hash($_POST['newPass'], PASSWORD_DEFAULT);
+
+        $admin = $this->adminModel->where("id", "1")->find();
+        if (password_verify($currentPassword, $admin[0]['password'])) {
+            if ($this->adminModel->where("id", "1")->set(["password" => $newPassword])->update()) {
+                return "200";
+            } else {
+                return "500";
+            }
+        } else {
+            return "401";
         }
     }
 }
