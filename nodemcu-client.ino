@@ -28,8 +28,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 const char* ssid = "PrivateAccess";
 const char* password = "2ndfloor";
 
-// void registerMode;
-// void attendanceMode;
+String masterTag;
 
 void setup() {
   Serial.begin(9600);
@@ -59,6 +58,7 @@ void setup() {
   SPI.begin();
   mfrc522.PCD_Init();
   statusReady();
+  masterTag = getMasterUID();
 }
 
 void loop() {
@@ -78,7 +78,7 @@ void loop() {
 
   //Check WiFi connection status
   if (WiFi.status() == WL_CONNECTED) {
-    if (uid == "C7 23 D0 39") {
+    if (uid == masterTag) {
       clearLCD(); 
       lcd.setCursor(0,0);
       lcd.print("**Registration**");
@@ -103,6 +103,28 @@ String getUID(byte* buffer, byte bufferSize) {
   }
   uid.toUpperCase();
   return uid;
+}
+
+String getMasterUID(){
+  WiFiClient client;
+  HTTPClient http;
+  // Start HTTP request definition
+  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/mastertag");
+
+  // Specify content-type header
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  // Data to send with HTTP POST
+  String httpRequestData = "api_key=hapiskocak";
+  // Send HTTP POST request
+  int httpResponseCode = http.POST(httpRequestData);
+
+String payload = http.getString();
+JSONVar response = JSON.parse(payload);
+return response["data"]["uid"];
+
+  // Free up resources
+  http.end();
+
 }
 
 void clearLCD() {
@@ -130,6 +152,8 @@ void statusReady() {
   lcd.setCursor(0, 0);
   lcd.print("Ready...");
 }
+
+
 
 void attendanceMode() {
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
@@ -257,7 +281,7 @@ void registerMode() {
   String uid = getUID(mfrc522.uid.uidByte, mfrc522.uid.size);
   mfrc522.PICC_HaltA();  // Halt PICC
 
-  if (uid != "C7 23 D0 39"){
+  if (uid != masterTag){
     
   WiFiClient client;
   HTTPClient http;
