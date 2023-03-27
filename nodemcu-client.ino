@@ -7,6 +7,11 @@
 #include <WiFiClient.h>
 #include <ESP8266HTTPClient.h>
 
+// WiFi Manager Library & it's dependencies
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>
+
 // Libray untuk parsing JSON
 #include <Arduino_JSON.h>
 
@@ -24,9 +29,8 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);
 // Set the LCD address to 0x27 for a 16 chars and 2 line display
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-// Define Wifi Credential
-const char* ssid = "PrivateAccess";
-const char* password = "2ndfloor";
+// Initiate WifiManager instance
+WiFiManager wifiManager;
 
 String masterTag;
 
@@ -44,46 +48,41 @@ void setup() {
   lcd.backlight();
 
   // Inisiasi koneksi ke WiFi
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
+  wifiManager.setAPCallback(configModeCallback);
+  wifiManager.autoConnect("aP-Config");
+
+  Serial.print("\nConnected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
 
   // Inisiasi instance RFID sensor
   SPI.begin();
   mfrc522.PCD_Init();
-  statusReady();
+  statusReady(0);
   masterTag = getMasterUID();
 }
 
 void loop() {
-  if (!mfrc522.PICC_IsNewCardPresent()) {
-    return;
-  }
-
-  // Select one of the cards
-  if (!mfrc522.PICC_ReadCardSerial()) {
-    return;
-  }
-
-  MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
-
-  String uid = getUID(mfrc522.uid.uidByte, mfrc522.uid.size);
-  mfrc522.PICC_HaltA();  // Halt PICC
-
-  //Check WiFi connection status
   if (WiFi.status() == WL_CONNECTED) {
+    if (digitalRead(3) == LOW) {
+      registerMode();
+    }
+
+    if (!mfrc522.PICC_IsNewCardPresent()) {
+      return;
+    }
+
+    // Select one of the cards
+    if (!mfrc522.PICC_ReadCardSerial()) {
+      return;
+    }
+
+    MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+
+    String uid = getUID(mfrc522.uid.uidByte, mfrc522.uid.size);
+    mfrc522.PICC_HaltA();  // Halt PICC
+
+    //Check WiFi connection status
     if (uid == masterTag) {
-      clearLCD(); 
-      lcd.setCursor(0,0);
-      lcd.print("**Registration**");
-      lcd.setCursor(0,1);
-      lcd.print("Scan New Tag...");
       registerMode();
     } else {
       attendanceMode();
@@ -91,7 +90,7 @@ void loop() {
   } else {
     notifyWifiDisconnect();
   }
-  statusReady();
+  statusReady(2000);
 }
 
 
@@ -105,7 +104,7 @@ String getUID(byte* buffer, byte bufferSize) {
   return uid;
 }
 
-String getMasterUID(){
+String getMasterUID() {
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
@@ -118,13 +117,12 @@ String getMasterUID(){
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
-String payload = http.getString();
-JSONVar response = JSON.parse(payload);
-return response["data"]["uid"];
+  String payload = http.getString();
+  JSONVar response = JSON.parse(payload);
+  return response["data"]["uid"];
 
   // Free up resources
   http.end();
-
 }
 
 void clearLCD() {
@@ -146,8 +144,8 @@ void successBuzzer() {
   digitalWrite(D8, LOW);
 }
 
-void statusReady() {
-  delay(3000);
+void statusReady(int delayDuration) {
+  delay(delayDuration);
   clearLCD();
   lcd.setCursor(0, 0);
   lcd.print("Ready...");
@@ -258,6 +256,8 @@ void attendanceMode() {
 
     lcd.setCursor(0, 1);
     lcd.print("Hm, Who Are You?");
+  } else {
+    notifyWifiDisconnect();
   }
 
   // Free up resources
@@ -266,125 +266,152 @@ void attendanceMode() {
 
 
 void registerMode() {
-  A:
-  if (!mfrc522.PICC_IsNewCardPresent()) {
-    goto A;
-  }
+  clearLCD();
+  lcd.setCursor(0, 0);
+  lcd.print("**Registration**");
+  lcd.setCursor(0, 1);
+  lcd.print("Scan New Tag...");
+A:
+  if (WiFi.status() == WL_CONNECTED) {
+    if (digitalRead(3) == HIGH) {
+      statusReady(0);
+      return;
+    }
 
-  // Select one of the cards
-  if (!mfrc522.PICC_ReadCardSerial()) {
-    goto A;
-  }
+    if (!mfrc522.PICC_IsNewCardPresent()) {
+      goto A;
+    }
 
-  MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+    // Select one of the cards
+    if (!mfrc522.PICC_ReadCardSerial()) {
+      goto A;
+    }
 
-  String uid = getUID(mfrc522.uid.uidByte, mfrc522.uid.size);
-  mfrc522.PICC_HaltA();  // Halt PICC
+    MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
-  if (uid != masterTag){
-    
-  WiFiClient client;
-  HTTPClient http;
+    String uid = getUID(mfrc522.uid.uidByte, mfrc522.uid.size);
+    mfrc522.PICC_HaltA();  // Halt PICC
 
-  // Start HTTP request definition
-  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/register");
+    if (uid != masterTag) {
 
-  // Specify content-type header
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  // Data to send with HTTP POST
-  String httpRequestData = "api_key=hapiskocak&new_uid=" + uid;
-  // Send HTTP POST request
-  int httpResponseCode = http.POST(httpRequestData);
+      WiFiClient client;
+      HTTPClient http;
 
-  Serial.print("HTTP Response code: ");
-  Serial.println(httpResponseCode);
-  int responseCode = httpResponseCode;
+      // Start HTTP request definition
+      http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/register");
 
-  if (responseCode == 201) {
-    clearLCD();
-    successBuzzer();
+      // Specify content-type header
+      http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+      // Data to send with HTTP POST
+      String httpRequestData = "api_key=hapiskocak&new_uid=" + uid;
+      // Send HTTP POST request
+      int httpResponseCode = http.POST(httpRequestData);
 
-    String payload = http.getString();
-    Serial.println(payload);
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+      int responseCode = httpResponseCode;
 
-    lcd.setCursor(0, 0);
-    lcd.print(responseCode);
-    lcd.print(" : Registered");
+      if (responseCode == 201) {
+        clearLCD();
+        successBuzzer();
 
-    JSONVar response = JSON.parse(payload);
-    lcd.setCursor(0, 1);
-    lcd.print((String)response["data"]["new_uid"]);
+        String payload = http.getString();
+        Serial.println(payload);
 
-  } else if (responseCode == 409) {
-    clearLCD();
-    errorBuzzer();
+        lcd.setCursor(0, 0);
+        lcd.print(responseCode);
+        lcd.print(" : Registered");
 
-    String payload = http.getString();
-    Serial.println(payload);
+        JSONVar response = JSON.parse(payload);
+        lcd.setCursor(0, 1);
+        lcd.print((String)response["data"]["new_uid"]);
 
-    lcd.setCursor(0, 0);
-    lcd.print(responseCode);
-    lcd.print(" : Conflict");
+      } else if (responseCode == 409) {
+        clearLCD();
+        errorBuzzer();
 
-    JSONVar response = JSON.parse(payload);
-    lcd.setCursor(0, 1);
-    lcd.print((String)response["data"]["conflict_uid"]);
+        String payload = http.getString();
+        Serial.println(payload);
 
-  } else if (responseCode == 500) {
-    clearLCD();
-    errorBuzzer();
+        lcd.setCursor(0, 0);
+        lcd.print(responseCode);
+        lcd.print(" : Conflict");
 
-    String payload = http.getString();
-    Serial.println(payload);
+        JSONVar response = JSON.parse(payload);
+        lcd.setCursor(0, 1);
+        lcd.print((String)response["data"]["conflict_uid"]);
 
-    lcd.setCursor(0, 0);
-    lcd.print(responseCode);
-    lcd.print(" : Failed");
+      } else if (responseCode == 500) {
+        clearLCD();
+        errorBuzzer();
 
-    lcd.setCursor(0, 1);
-    lcd.print("Server Error!");
-  } else if (responseCode == 401) {
-    clearLCD();
-    errorBuzzer();
+        String payload = http.getString();
+        Serial.println(payload);
 
-    String payload = http.getString();
-    Serial.println(payload);
+        lcd.setCursor(0, 0);
+        lcd.print(responseCode);
+        lcd.print(" : Failed");
 
-    lcd.setCursor(0, 0);
-    lcd.print(responseCode);
-    lcd.print(" : Failed");
+        lcd.setCursor(0, 1);
+        lcd.print("Server Error!");
+      } else if (responseCode == 401) {
+        clearLCD();
+        errorBuzzer();
 
-    lcd.setCursor(0, 1);
-    lcd.print("Unauthorized!");
-  } else if (responseCode == 400) {
-    clearLCD();
-    errorBuzzer();
+        String payload = http.getString();
+        Serial.println(payload);
 
-    String payload = http.getString();
-    Serial.println(payload);
+        lcd.setCursor(0, 0);
+        lcd.print(responseCode);
+        lcd.print(" : Failed");
 
-    lcd.setCursor(0, 0);
-    lcd.print(responseCode);
-    lcd.print(" : Failed");
+        lcd.setCursor(0, 1);
+        lcd.print("Unauthorized!");
+      } else if (responseCode == 400) {
+        clearLCD();
+        errorBuzzer();
 
-    lcd.setCursor(0, 1);
-    lcd.print("Bad Request!");
-  }
+        String payload = http.getString();
+        Serial.println(payload);
 
-  // Free up resources
-  http.end();
+        lcd.setCursor(0, 0);
+        lcd.print(responseCode);
+        lcd.print(" : Failed");
+
+        lcd.setCursor(0, 1);
+        lcd.print("Bad Request!");
+      } else {
+        notifyWifiDisconnect();
+      }
+
+      // Free up resources
+      http.end();
+    } else {
+      statusReady(0);
+      return;
+    }
   }else{
-    statusReady();
-    return;
+    notifyWifiDisconnect();
   }
-
 }
 
 void notifyWifiDisconnect() {
-  Serial.println("WiFi Disconnected");
   clearLCD();
-  lcd.setCursor(7, 0);
-  lcd.print("Wifi");
-  lcd.setCursor(3, 1);
-  lcd.print("Disconnected");
+  Serial.println("WiFi Disconnected");
+  lcd.setCursor(0, 0);
+  lcd.print("System Offline");
+  lcd.setCursor(0, 1);
+  lcd.print("WiFi Disconnect");
+}
+
+void configModeCallback(WiFiManager* myWiFiManager) {
+  Serial.println("Entered config mode");
+  Serial.println(WiFi.softAPIP());
+  clearLCD();
+  lcd.setCursor(0, 0);
+  lcd.print("SSID : aP-Config");
+  lcd.setCursor(0, 1);
+  lcd.print("IP : 192.168.4.1");
+  //if you used auto generated SSID, print it
+  Serial.println(myWiFiManager->getConfigPortalSSID());
 }
