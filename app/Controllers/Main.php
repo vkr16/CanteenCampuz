@@ -365,4 +365,27 @@ class Main extends BaseController
             return "404";
         }
     }
+
+    public function config()
+    {
+        if ($admin = $this->adminModel->where("id", "1")->find()) {
+            $data = [
+                "update_url" => $admin[0]['update_url'],
+                "update_mode" => $admin[0]['update_mode'] == '1' ? true : false,
+            ];
+        }
+        return view("apanel/config", $data);
+    }
+
+    public function setUpdateSource()
+    {
+        if (isset($_POST['url'])) {
+            $update_url = $_POST['url'];
+            if ($this->adminModel->where("id", "1")->set("update_url", $update_url)->update()) {
+                return "200";
+            } else {
+                return "500";
+            }
+        }
+    }
 }

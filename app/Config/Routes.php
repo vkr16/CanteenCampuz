@@ -48,6 +48,8 @@ $routes->post('/apanel/attendance/plusovertime', 'Main::plusovertime');
 $routes->post('/apanel/attendance/minusovertime', 'Main::minusovertime');
 $routes->post('/apanel/changepassword', 'Main::changePassword');
 $routes->post('/apanel/changemaster', 'Main::changeMaster');
+$routes->get('/apanel/config', 'Main::config');
+$routes->get('/apanel/config/update/setsource', 'Main::setUpdateSource');
 
 
 
@@ -60,6 +62,19 @@ $routes->post('/api/v1/register', 'API::register');
 
 // Endpoint Attendance
 $routes->post('/api/v1/attendance', 'API::attendance');
+
+// Endpoint Get Update Mode
+$routes->post('/api/v1/update/mode/get', 'API::getUpdatemode');
+
+// Endpoint Disable & Enable Update Mode
+$routes->post('/api/v1/update/mode/disable', 'API::disableUpdate');
+$routes->post('/api/v1/update/mode/enable', 'API::enableUpdate');
+
+// Endpoint Set Update URL
+$routes->post('/api/v1/update/url/set', 'API::setUpdateUrl');
+
+// Endpoint Get Update URL
+$routes->post('/api/v1/update/url/get', 'API::getUpdateUrl');
 
 
 /*

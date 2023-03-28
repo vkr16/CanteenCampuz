@@ -23,6 +23,12 @@
                     Summary
                 </a>
             </li>
+            <li>
+                <a href="<?= base_url('apanel/config') ?>" class="nav-link rounded-0" id="sidebar_config">
+                    <i class="fa-solid fa-gears fa-fw"></i>&emsp;
+                    Configuration
+                </a>
+            </li>
         </ul>
         <hr>
         <div class="px-3 dropup">
