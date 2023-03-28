@@ -19,9 +19,14 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
+// OTA Update
+#include <ESP8266httpUpdate.h>
+
 // Define pin untuk MFRC522
 #define RST_PIN D3
 #define SS_PIN D4
+#define buzzer1 D8
+#define switch1 3
 
 // Create MFRC522 instance
 MFRC522 mfrc522(SS_PIN, RST_PIN);
@@ -31,17 +36,12 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // Initiate WifiManager instance
 WiFiManager wifiManager;
-
-String masterTag;
+String masterTag, updateUrl, updateMode;
 
 void setup() {
   Serial.begin(9600);
-
-  // Setup PinMode untuk Buzzer
-  pinMode(D8, OUTPUT);
-
-  // Setup PinMode untuk Mode Switch
-  pinMode(3, INPUT);
+  pinMode(buzzer1, OUTPUT);
+  pinMode(switch1, INPUT);
 
   // Inisiasi instance LCD dan menyalakan backlight
   lcd.begin();
@@ -58,14 +58,30 @@ void setup() {
   SPI.begin();
   mfrc522.PCD_Init();
   statusReady(0);
+
+  ESPhttpUpdate.setClientTimeout(2000);
+
   masterTag = getMasterUID();
+  updateUrl = getUpdateUrl();
+  updateMode = getUpdateMode() == "1" ? "ON" : "OFF";
+  Serial.println("update url : " + updateUrl);
+  Serial.println("update mode : " + updateMode);
+  disableUpdate();
 }
 
 void loop() {
   if (WiFi.status() == WL_CONNECTED) {
-    if (digitalRead(3) == LOW) {
+    if (getUpdateMode() == "1") {
+      clearLCD();
+      lcd.setCursor(0, 0);
+      lcd.print("Firmware Update");
+      firmwareUpdate();
+    }
+
+    if (digitalRead(switch1) == LOW) {
       registerMode();
     }
+
 
     if (!mfrc522.PICC_IsNewCardPresent()) {
       return;
@@ -125,6 +141,64 @@ String getMasterUID() {
   http.end();
 }
 
+String getUpdateUrl() {
+  WiFiClient client;
+  HTTPClient http;
+  // Start HTTP request definition
+  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/update/url/get");
+
+  // Specify content-type header
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  // Data to send with HTTP POST
+  String httpRequestData = "api_key=hapiskocak";
+  // Send HTTP POST request
+  int httpResponseCode = http.POST(httpRequestData);
+
+  String payload = http.getString();
+  JSONVar response = JSON.parse(payload);
+  return response["data"]["update_url"];
+
+  // Free up resources
+  http.end();
+}
+
+String getUpdateMode() {
+  WiFiClient client;
+  HTTPClient http;
+  // Start HTTP request definition
+  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/update/mode/get");
+
+  // Specify content-type header
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  // Data to send with HTTP POST
+  String httpRequestData = "api_key=hapiskocak";
+  // Send HTTP POST request
+  int httpResponseCode = http.POST(httpRequestData);
+
+  String payload = http.getString();
+  JSONVar response = JSON.parse(payload);
+  return response["data"]["update_mode"];
+
+  // Free up resources
+  http.end();
+}
+
+void disableUpdate(){
+  WiFiClient client;
+  HTTPClient http;
+  // Start HTTP request definition
+  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/update/mode/disable");
+
+  // Specify content-type header
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  // Data to send with HTTP POST
+  String httpRequestData = "api_key=hapiskocak";
+  // Send HTTP POST request
+  int httpResponseCode = http.POST(httpRequestData);
+  // Free up resources
+  http.end();
+}
+
 void clearLCD() {
   lcd.setCursor(0, 0);
   lcd.print("                ");
@@ -133,22 +207,20 @@ void clearLCD() {
 }
 
 void errorBuzzer() {
-  digitalWrite(D8, HIGH);
-  delay(500);
-  digitalWrite(D8, LOW);
+  tone(buzzer1, 1000, 500);
 }
 
 void successBuzzer() {
-  digitalWrite(D8, HIGH);
-  delay(1000);
-  digitalWrite(D8, LOW);
+  tone(buzzer1, 1000, 1000);
 }
 
 void statusReady(int delayDuration) {
   delay(delayDuration);
   clearLCD();
   lcd.setCursor(0, 0);
-  lcd.print("Ready...");
+  lcd.print("Hapis Kocak");
+  lcd.setCursor(0,1);
+  lcd.print("v0.9-beta");
 }
 
 
@@ -390,7 +462,7 @@ A:
       statusReady(0);
       return;
     }
-  }else{
+  } else {
     notifyWifiDisconnect();
   }
 }
@@ -405,6 +477,7 @@ void notifyWifiDisconnect() {
 }
 
 void configModeCallback(WiFiManager* myWiFiManager) {
+  errorBuzzer();
   Serial.println("Entered config mode");
   Serial.println(WiFi.softAPIP());
   clearLCD();
@@ -414,4 +487,70 @@ void configModeCallback(WiFiManager* myWiFiManager) {
   lcd.print("IP : 192.168.4.1");
   //if you used auto generated SSID, print it
   Serial.println(myWiFiManager->getConfigPortalSSID());
+}
+
+void firmwareUpdate() {
+  WiFiClientSecure client;
+  client.setInsecure();
+
+  ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW);
+
+  ESPhttpUpdate.onStart(update_started);
+  ESPhttpUpdate.onEnd(update_finished);
+  ESPhttpUpdate.onProgress(update_progress);
+  ESPhttpUpdate.onError(update_error);
+  updateUrl = getUpdateUrl();
+  t_httpUpdate_return ret = ESPhttpUpdate.update(client, updateUrl);
+
+  lcd.setCursor(0, 1);
+  switch (ret) {
+    case HTTP_UPDATE_FAILED:
+      Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+      lcd.print("UPDATE ERROR    ");
+      break;
+
+    case HTTP_UPDATE_NO_UPDATES:
+      Serial.println("HTTP_UPDATE_NO_UPDATES");
+      lcd.print("NO UPDATE       ");
+      break;
+
+    case HTTP_UPDATE_OK:
+      Serial.println("HTTP_UPDATE_OK");
+      lcd.print("UPDATE OK       ");
+      break;
+  }
+}
+
+void update_started() {
+  Serial.println("CALLBACK:  HTTP update process started");
+  lcd.setCursor(0, 1);
+  lcd.print("UPDATE STARTED");
+}
+
+void update_finished() {
+  Serial.println("CALLBACK:  HTTP update process finished");
+  lcd.setCursor(0, 1);
+  lcd.print("UPDATE FINISHED ");
+}
+
+void update_progress(int cur, int total) {
+  Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes...\n", cur, total);
+  float downloaded = cur;
+  float totalSize = total;
+  int percentage = downloaded/totalSize*100;
+  Serial.print("Downloading");
+  Serial.print(percentage);
+  Serial.println("%");
+  lcd.setCursor(0,1);
+  lcd.print("Processing ");
+  lcd.print(percentage);
+  lcd.print("%   ");
+}
+
+void update_error(int err) {
+  Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
+  lcd.setCursor(0, 1);
+  lcd.print("UPDATE ERROR    ");
+  delay(3000);
+  ESP.reset();
 }
