@@ -1,13 +1,14 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 4.9.11
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Mar 24, 2023 at 12:48 AM
--- Server version: 10.4.25-MariaDB
--- PHP Version: 8.1.10
+-- Host: localhost:3306
+-- Generation Time: Mar 28, 2023 at 02:24 PM
+-- Server version: 10.5.19-MariaDB-cll-lve
+-- PHP Version: 7.4.33
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -18,7 +19,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `project-hfdzam`
+-- Database: `akuonlin_hfdzam`
 --
 
 -- --------------------------------------------------------
@@ -32,15 +33,17 @@ CREATE TABLE `admins` (
   `name` varchar(255) NOT NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `master_tag` varchar(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `master_tag` varchar(11) NOT NULL,
+  `update_url` mediumtext NOT NULL,
+  `update_mode` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `name`, `username`, `password`, `master_tag`) VALUES
-(1, 'Administrator', 'admin', '$2y$10$j2WE7rjiKCilDbuf44nE6uECHj45R.BOODJ6RrvGPmDhKOsJdmMh2', 'C7 A4 F1 33');
+INSERT INTO `admins` (`id`, `name`, `username`, `password`, `master_tag`, `update_url`, `update_mode`) VALUES
+(1, 'Administrator', 'admin', '$2y$10$j2WE7rjiKCilDbuf44nE6uECHj45R.BOODJ6RrvGPmDhKOsJdmMh2', '44 C2 66 3B', 'https://raw.githubusercontent.com/vkr16/experiment-repo/main/hfdzam.ino.bin', 0);
 
 -- --------------------------------------------------------
 
@@ -55,7 +58,7 @@ CREATE TABLE `attendance` (
   `created_at` int(11) NOT NULL,
   `updated_at` int(11) NOT NULL,
   `deleted_at` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -71,7 +74,7 @@ CREATE TABLE `employees` (
   `created_at` int(11) NOT NULL,
   `updated_at` int(11) NOT NULL,
   `deleted_at` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Indexes for dumped tables
