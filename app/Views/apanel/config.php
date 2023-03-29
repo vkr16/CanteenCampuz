@@ -79,6 +79,29 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-md-4 px-2 my-2">
+                        <div class="card rounded-0">
+                            <div class="card-header rounded-0 bg-primary text-white">
+                                <h5 class="mb-0">Admin Password</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="oldPassword" class="form-label">Current Password</label>
+                                    <input type="password" class="form-control rounded-0" id="oldPassword" placeholder="Current Password">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="newPassword" class="form-label">New Password</label>
+                                    <input type="password" class="form-control rounded-0" id="newPassword" placeholder="New Password">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control rounded-0" id="confirmPassword" placeholder="Confirm Password">
+                                </div>
+                                <button type="button" class="btn btn-primary rounded-0" onclick="submitPassword()">Save changes</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -235,6 +258,32 @@
                             Notiflix.Notify.failure("Admin account not found");
                         } else if (data == "500") {
                             Notiflix.Notify.failure("Internal Server Error");
+                        }
+                    })
+            }
+        }
+
+        function submitPassword() {
+            const currentPass = $("#oldPassword").val();
+            const newPass = $("#newPassword").val();
+            const confirmPass = $("#confirmPassword").val();
+
+            if (newPass !== confirmPass) {
+                Notiflix.Notify.failure("New Password did not match");
+            } else {
+                $.post("<?= base_url('apanel/changepassword') ?>", {
+                        currentPass: currentPass,
+                        newPass: newPass,
+                    })
+                    .done((data) => {
+                        if (data == "401") {
+                            Notiflix.Notify.failure("Current password invalid");
+                        } else if (data == "200") {
+                            Notiflix.Notify.success("Password changed successfully");
+                            $("#oldPassword").val("");
+                            $("#newPassword").val("");
+                            $("#confirmPassword").val("");
+                            $("#changePassModal").modal("hide");
                         }
                     })
             }
