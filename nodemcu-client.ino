@@ -36,9 +36,11 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // Initiate WifiManager instance
 WiFiManager wifiManager;
-String masterTag, updateUrl, updateMode;
+String masterTag, updateUrl, updateMode, regMode;
+bool authByTag = false;
 
-void setup() {
+void setup()
+{
   Serial.begin(9600);
   pinMode(buzzer1, OUTPUT);
   pinMode(switch1, INPUT);
@@ -69,50 +71,62 @@ void setup() {
   disableUpdate();
 }
 
-void loop() {
-  if (WiFi.status() == WL_CONNECTED) {
-    if (getUpdateMode() == "1") {
+void loop()
+{
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    if (getUpdateMode() == "1")
+    {
       clearLCD();
       lcd.setCursor(0, 0);
       lcd.print("Firmware Update");
       firmwareUpdate();
     }
-
-    if (digitalRead(switch1) == LOW) {
+    regMode = getRegisterMode();
+    if (digitalRead(switch1) == LOW || regMode == "1")
+    {
       registerMode();
     }
 
-
-    if (!mfrc522.PICC_IsNewCardPresent()) {
+    if (!mfrc522.PICC_IsNewCardPresent())
+    {
       return;
     }
 
     // Select one of the cards
-    if (!mfrc522.PICC_ReadCardSerial()) {
+    if (!mfrc522.PICC_ReadCardSerial())
+    {
       return;
     }
 
     MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
     String uid = getUID(mfrc522.uid.uidByte, mfrc522.uid.size);
-    mfrc522.PICC_HaltA();  // Halt PICC
+    mfrc522.PICC_HaltA(); // Halt PICC
 
-    //Check WiFi connection status
-    if (uid == masterTag) {
+    // Check WiFi connection status
+    if (uid == masterTag)
+    {
+      authByTag = true;
       registerMode();
-    } else {
+    }
+    else
+    {
       attendanceMode();
     }
-  } else {
+  }
+  else
+  {
     notifyWifiDisconnect();
   }
   statusReady(2000);
 }
 
-
-String getUID(byte* buffer, byte bufferSize) {
+String getUID(byte *buffer, byte bufferSize)
+{
   String uid = "";
-  for (byte i = 0; i < bufferSize; i++) {
+  for (byte i = 0; i < bufferSize; i++)
+  {
     i == 0 ? uid += buffer[i] < 0x10 ? "0" : "" : uid += buffer[i] < 0x10 ? " 0" : " ";
     uid += String(buffer[i], HEX);
   }
@@ -120,7 +134,8 @@ String getUID(byte* buffer, byte bufferSize) {
   return uid;
 }
 
-String getMasterUID() {
+String getMasterUID()
+{
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
@@ -141,7 +156,8 @@ String getMasterUID() {
   http.end();
 }
 
-String getUpdateUrl() {
+String getUpdateUrl()
+{
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
@@ -162,7 +178,8 @@ String getUpdateUrl() {
   http.end();
 }
 
-String getUpdateMode() {
+String getUpdateMode()
+{
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
@@ -183,7 +200,30 @@ String getUpdateMode() {
   http.end();
 }
 
-void disableUpdate(){
+String getRegisterMode()
+{
+  WiFiClient client;
+  HTTPClient http;
+  // Start HTTP request definition
+  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/register/mode/get");
+
+  // Specify content-type header
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  // Data to send with HTTP POST
+  String httpRequestData = "api_key=hapiskocak";
+  // Send HTTP POST request
+  int httpResponseCode = http.POST(httpRequestData);
+
+  String payload = http.getString();
+  JSONVar response = JSON.parse(payload);
+  return response["data"]["register_mode"];
+
+  // Free up resources
+  http.end();
+}
+
+void disableUpdate()
+{
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
@@ -199,37 +239,40 @@ void disableUpdate(){
   http.end();
 }
 
-void clearLCD() {
+void clearLCD()
+{
   lcd.setCursor(0, 0);
   lcd.print("                ");
   lcd.setCursor(0, 1);
   lcd.print("                ");
 }
 
-void errorBuzzer() {
+void errorBuzzer()
+{
   tone(buzzer1, 1000, 500);
 }
 
-void successBuzzer() {
+void successBuzzer()
+{
   tone(buzzer1, 1000, 1000);
 }
 
-void statusReady(int delayDuration) {
+void statusReady(int delayDuration)
+{
   delay(delayDuration);
   clearLCD();
   lcd.setCursor(0, 0);
-  lcd.print("Hapis Kocak");
-  lcd.setCursor(0,1);
-  lcd.print("v0.9-beta");
+  lcd.print("Ready...");
+  lcd.setCursor(0, 1);
+  lcd.print("v1.0-rev2");
 }
 
-
-
-void attendanceMode() {
+void attendanceMode()
+{
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
   String uid = getUID(mfrc522.uid.uidByte, mfrc522.uid.size);
-  mfrc522.PICC_HaltA();  // Halt PICC
+  mfrc522.PICC_HaltA(); // Halt PICC
 
   WiFiClient client;
   HTTPClient http;
@@ -247,7 +290,8 @@ void attendanceMode() {
   Serial.println(httpResponseCode);
   int responseCode = httpResponseCode;
 
-  if (responseCode == 200 || responseCode == 201) {
+  if (responseCode == 200 || responseCode == 201)
+  {
     clearLCD();
     successBuzzer();
 
@@ -261,8 +305,9 @@ void attendanceMode() {
     JSONVar response = JSON.parse(payload);
     lcd.setCursor(0, 1);
     lcd.print((String)response["data"]["employee_name"]);
-
-  } else if (responseCode == 500) {
+  }
+  else if (responseCode == 500)
+  {
     clearLCD();
     errorBuzzer();
 
@@ -275,7 +320,9 @@ void attendanceMode() {
 
     lcd.setCursor(0, 1);
     lcd.print("Server Error!");
-  } else if (responseCode == 401) {
+  }
+  else if (responseCode == 401)
+  {
     clearLCD();
     errorBuzzer();
 
@@ -288,7 +335,9 @@ void attendanceMode() {
 
     lcd.setCursor(0, 1);
     lcd.print("Unauthorized!");
-  } else if (responseCode == 404) {
+  }
+  else if (responseCode == 404)
+  {
     clearLCD();
     errorBuzzer();
 
@@ -302,7 +351,9 @@ void attendanceMode() {
 
     lcd.setCursor(0, 1);
     lcd.print((String)response["data"]["uid"]);
-  } else if (responseCode == 400) {
+  }
+  else if (responseCode == 400)
+  {
     clearLCD();
     errorBuzzer();
 
@@ -315,7 +366,9 @@ void attendanceMode() {
 
     lcd.setCursor(0, 1);
     lcd.print("Bad Request!");
-  } else if (responseCode == 406) {
+  }
+  else if (responseCode == 406)
+  {
     clearLCD();
     errorBuzzer();
 
@@ -328,7 +381,9 @@ void attendanceMode() {
 
     lcd.setCursor(0, 1);
     lcd.print("Hm, Who Are You?");
-  } else {
+  }
+  else
+  {
     notifyWifiDisconnect();
   }
 
@@ -336,35 +391,41 @@ void attendanceMode() {
   http.end();
 }
 
-
-void registerMode() {
+void registerMode()
+{
   clearLCD();
   lcd.setCursor(0, 0);
   lcd.print("**Registration**");
   lcd.setCursor(0, 1);
   lcd.print("Scan New Tag...");
 A:
-  if (WiFi.status() == WL_CONNECTED) {
-    if (digitalRead(3) == HIGH) {
+  regMode = getRegisterMode();
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    if (digitalRead(3) == HIGH && authByTag == false && regMode == "0")
+    {
       statusReady(0);
       return;
     }
 
-    if (!mfrc522.PICC_IsNewCardPresent()) {
+    if (!mfrc522.PICC_IsNewCardPresent())
+    {
       goto A;
     }
 
     // Select one of the cards
-    if (!mfrc522.PICC_ReadCardSerial()) {
+    if (!mfrc522.PICC_ReadCardSerial())
+    {
       goto A;
     }
 
     MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
 
     String uid = getUID(mfrc522.uid.uidByte, mfrc522.uid.size);
-    mfrc522.PICC_HaltA();  // Halt PICC
+    mfrc522.PICC_HaltA(); // Halt PICC
 
-    if (uid != masterTag) {
+    if (uid != masterTag)
+    {
 
       WiFiClient client;
       HTTPClient http;
@@ -383,7 +444,8 @@ A:
       Serial.println(httpResponseCode);
       int responseCode = httpResponseCode;
 
-      if (responseCode == 201) {
+      if (responseCode == 201)
+      {
         clearLCD();
         successBuzzer();
 
@@ -397,8 +459,9 @@ A:
         JSONVar response = JSON.parse(payload);
         lcd.setCursor(0, 1);
         lcd.print((String)response["data"]["new_uid"]);
-
-      } else if (responseCode == 409) {
+      }
+      else if (responseCode == 409)
+      {
         clearLCD();
         errorBuzzer();
 
@@ -412,8 +475,9 @@ A:
         JSONVar response = JSON.parse(payload);
         lcd.setCursor(0, 1);
         lcd.print((String)response["data"]["conflict_uid"]);
-
-      } else if (responseCode == 500) {
+      }
+      else if (responseCode == 500)
+      {
         clearLCD();
         errorBuzzer();
 
@@ -426,7 +490,9 @@ A:
 
         lcd.setCursor(0, 1);
         lcd.print("Server Error!");
-      } else if (responseCode == 401) {
+      }
+      else if (responseCode == 401)
+      {
         clearLCD();
         errorBuzzer();
 
@@ -439,7 +505,9 @@ A:
 
         lcd.setCursor(0, 1);
         lcd.print("Unauthorized!");
-      } else if (responseCode == 400) {
+      }
+      else if (responseCode == 400)
+      {
         clearLCD();
         errorBuzzer();
 
@@ -452,22 +520,30 @@ A:
 
         lcd.setCursor(0, 1);
         lcd.print("Bad Request!");
-      } else {
+      }
+      else
+      {
         notifyWifiDisconnect();
       }
 
       // Free up resources
       http.end();
-    } else {
+    }
+    else
+    {
+      authByTag = false;
       statusReady(0);
       return;
     }
-  } else {
+  }
+  else
+  {
     notifyWifiDisconnect();
   }
 }
 
-void notifyWifiDisconnect() {
+void notifyWifiDisconnect()
+{
   clearLCD();
   Serial.println("WiFi Disconnected");
   lcd.setCursor(0, 0);
@@ -476,7 +552,8 @@ void notifyWifiDisconnect() {
   lcd.print("WiFi Disconnect");
 }
 
-void configModeCallback(WiFiManager* myWiFiManager) {
+void configModeCallback(WiFiManager *myWiFiManager)
+{
   errorBuzzer();
   Serial.println("Entered config mode");
   Serial.println(WiFi.softAPIP());
@@ -485,11 +562,12 @@ void configModeCallback(WiFiManager* myWiFiManager) {
   lcd.print("SSID : aP-Config");
   lcd.setCursor(0, 1);
   lcd.print("IP : 192.168.4.1");
-  //if you used auto generated SSID, print it
+  // if you used auto generated SSID, print it
   Serial.println(myWiFiManager->getConfigPortalSSID());
 }
 
-void firmwareUpdate() {
+void firmwareUpdate()
+{
   WiFiClientSecure client;
   client.setInsecure();
 
@@ -503,51 +581,56 @@ void firmwareUpdate() {
   t_httpUpdate_return ret = ESPhttpUpdate.update(client, updateUrl);
 
   lcd.setCursor(0, 1);
-  switch (ret) {
-    case HTTP_UPDATE_FAILED:
-      Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-      lcd.print("UPDATE ERROR    ");
-      break;
+  switch (ret)
+  {
+  case HTTP_UPDATE_FAILED:
+    Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+    lcd.print("UPDATE ERROR    ");
+    break;
 
-    case HTTP_UPDATE_NO_UPDATES:
-      Serial.println("HTTP_UPDATE_NO_UPDATES");
-      lcd.print("NO UPDATE       ");
-      break;
+  case HTTP_UPDATE_NO_UPDATES:
+    Serial.println("HTTP_UPDATE_NO_UPDATES");
+    lcd.print("NO UPDATE       ");
+    break;
 
-    case HTTP_UPDATE_OK:
-      Serial.println("HTTP_UPDATE_OK");
-      lcd.print("UPDATE OK       ");
-      break;
+  case HTTP_UPDATE_OK:
+    Serial.println("HTTP_UPDATE_OK");
+    lcd.print("UPDATE OK       ");
+    break;
   }
 }
 
-void update_started() {
+void update_started()
+{
   Serial.println("CALLBACK:  HTTP update process started");
   lcd.setCursor(0, 1);
   lcd.print("UPDATE STARTED");
 }
 
-void update_finished() {
+void update_finished()
+{
   Serial.println("CALLBACK:  HTTP update process finished");
   lcd.setCursor(0, 1);
   lcd.print("UPDATE FINISHED ");
 }
 
-void update_progress(int cur, int total) {
+void update_progress(int cur, int total)
+{
   Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes...\n", cur, total);
   float downloaded = cur;
   float totalSize = total;
-  int percentage = downloaded/totalSize*100;
+  int percentage = downloaded / totalSize * 100;
   Serial.print("Downloading");
   Serial.print(percentage);
   Serial.println("%");
-  lcd.setCursor(0,1);
+  lcd.setCursor(0, 1);
   lcd.print("Processing ");
   lcd.print(percentage);
   lcd.print("%   ");
 }
 
-void update_error(int err) {
+void update_error(int err)
+{
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
   lcd.setCursor(0, 1);
   lcd.print("UPDATE ERROR    ");
