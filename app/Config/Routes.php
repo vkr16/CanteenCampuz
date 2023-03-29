@@ -76,6 +76,12 @@ $routes->post('/api/v1/update/url/set', 'API::setUpdateUrl');
 // Endpoint Get Update URL
 $routes->post('/api/v1/update/url/get', 'API::getUpdateUrl');
 
+// Endpoint Get register Mode Status
+$routes->post('/api/v1/register/mode/get', 'API::getRegisterMode');
+
+// Endpoint Disable & Enable Register Mode
+$routes->post('/api/v1/register/mode/disable', 'API::disableRegister');
+$routes->post('/api/v1/register/mode/enable', 'API::enableRegister');
 
 /*
  * --------------------------------------------------------------------

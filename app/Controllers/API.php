@@ -442,4 +442,131 @@ class API extends BaseController
             return $this->respond($data, 401);
         }
     }
+
+    public function getRegisterMode()
+    {
+        if (isset($_POST['api_key']) && $_POST['api_key'] == $_ENV['API_KEY']) {
+            if ($admin = $this->adminModel->where("id", "1")->find()) {
+                $register_mode = $admin[0]['register_mode'];
+                $data = [
+                    "success" => true,
+                    "status" => "200 OK",
+                    "message" => "Successfully get register mode status information",
+                    "data" => [
+                        "register_mode" => $register_mode
+                    ]
+                ];
+
+                return $this->respond($data, 200);
+            } else {
+                $data = [
+                    "success" => false,
+                    "status" => "404 Not Found",
+                    "message" => "Admin account not found",
+                    "data" => []
+                ];
+
+                return $this->respond($data, 404);
+            }
+        } else {
+            $data = [
+                "success" => false,
+                "status" => "401 Unauthorized",
+                "message" => "Unauthorized, Invalid API key",
+                "data" => []
+            ];
+
+            return $this->respond($data, 401);
+        }
+    }
+
+    public function enableRegister()
+    {
+        if (isset($_POST['api_key']) && $_POST['api_key'] == $_ENV['API_KEY']) {
+            if ($admin = $this->adminModel->where("id", "1")->find()) {
+                if ($this->adminModel->where("id", "1")->set("register_mode", "1")->update()) {
+                    $data = [
+                        "success" => true,
+                        "status" => "200 OK",
+                        "message" => "Register mode enabled successfully",
+                        "data" => []
+                    ];
+
+                    return $this->respond($data, 200);
+                } else {
+                    $data = [
+                        "success" => true,
+                        "status" => "500 Internal Server Error",
+                        "message" => "Internal server error, please try again or contact your administrator",
+                        "data" => []
+                    ];
+
+                    return $this->respond($data, 500);
+                }
+            } else {
+                $data = [
+                    "success" => false,
+                    "status" => "404 Not Found",
+                    "message" => "Admin account not found",
+                    "data" => []
+                ];
+
+                return $this->respond($data, 404);
+            }
+        } else {
+            $data = [
+                "success" => false,
+                "status" => "401 Unauthorized",
+                "message" => "Unauthorized, Invalid API key",
+                "data" => []
+            ];
+
+            return $this->respond($data, 401);
+        }
+    }
+
+    public function disableRegister()
+    {
+        if (isset($_POST['api_key']) && $_POST['api_key'] == $_ENV['API_KEY']) {
+            if ($admin = $this->adminModel->where("id", "1")->find()) {
+                if ($this->adminModel->where("id", "1")->set("register_mode", "0")->update()) {
+                    $data = [
+                        "success" => true,
+                        "status" => "200 OK",
+                        "message" => "Register mode disabled successfully",
+                        "data" => []
+                    ];
+
+                    return $this->respond($data, 200);
+                } else {
+                    $data = [
+                        "success" => true,
+                        "status" => "500 Internal Server Error",
+                        "message" => "Internal server error, please try again or contact your administrator",
+                        "data" => []
+                    ];
+
+                    return $this->respond($data, 500);
+                }
+            } else {
+                $data = [
+                    "success" => false,
+                    "status" => "404 Not Found",
+                    "message" => "Admin account not found",
+                    "data" => []
+                ];
+
+                return $this->respond($data, 404);
+            }
+        } else {
+            $data = [
+                "success" => false,
+                "status" => "401 Unauthorized",
+                "message" => "Unauthorized, Invalid API key",
+                "data" => []
+            ];
+
+            return $this->respond($data, 401);
+        }
+    }
 }
