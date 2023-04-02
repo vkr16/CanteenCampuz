@@ -139,12 +139,12 @@ String getMasterUID()
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
-  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/mastertag");
+  http.begin(client, "http://canteencampuz.biz.id/api/v1/mastertag");
 
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=hapiskocak";
+  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -161,12 +161,12 @@ String getUpdateUrl()
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
-  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/update/url/get");
+  http.begin(client, "http://canteencampuz.biz.id/api/v1/update/url/get");
 
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=hapiskocak";
+  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -183,12 +183,12 @@ String getUpdateMode()
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
-  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/update/mode/get");
+  http.begin(client, "http://canteencampuz.biz.id/api/v1/update/mode/get");
 
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=hapiskocak";
+  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -205,12 +205,12 @@ String getRegisterMode()
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
-  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/register/mode/get");
+  http.begin(client, "http://canteencampuz.biz.id/api/v1/register/mode/get");
 
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=hapiskocak";
+  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -227,12 +227,12 @@ void disableUpdate()
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
-  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/update/mode/disable");
+  http.begin(client, "http://canteencampuz.biz.id/api/v1/update/mode/disable");
 
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=hapiskocak";
+  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
   // Free up resources
@@ -264,7 +264,7 @@ void statusReady(int delayDuration)
   lcd.setCursor(0, 0);
   lcd.print("Ready...");
   lcd.setCursor(0, 1);
-  lcd.print("v1.0-rev2");
+  lcd.print("v1.0-rc1");
 }
 
 void attendanceMode()
@@ -277,12 +277,12 @@ void attendanceMode()
   WiFiClient client;
   HTTPClient http;
   // Start HTTP request definition
-  http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/attendance");
+  http.begin(client, "http://canteencampuz.biz.id/api/v1/attendance");
 
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=hapiskocak&uid=" + uid;
+  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=&uid=" + uid;
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -431,12 +431,12 @@ A:
       HTTPClient http;
 
       // Start HTTP request definition
-      http.begin(client, "http://hfdzam.akuonline.my.id/api/v1/register");
+      http.begin(client, "http://canteencampuz.biz.id/api/v1/register");
 
       // Specify content-type header
       http.addHeader("Content-Type", "application/x-www-form-urlencoded");
       // Data to send with HTTP POST
-      String httpRequestData = "api_key=hapiskocak&new_uid=" + uid;
+      String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=&new_uid=" + uid;
       // Send HTTP POST request
       int httpResponseCode = http.POST(httpRequestData);
 
