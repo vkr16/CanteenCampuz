@@ -144,7 +144,7 @@ String getMasterUID()
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
+  String httpRequestData = "api_key=API_KEY_HERE";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -166,7 +166,7 @@ String getUpdateUrl()
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
+  String httpRequestData = "api_key=API_KEY_HERE";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -188,7 +188,7 @@ String getUpdateMode()
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
+  String httpRequestData = "api_key=API_KEY_HERE";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -210,7 +210,7 @@ String getRegisterMode()
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
+  String httpRequestData = "api_key=API_KEY_HERE";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -232,7 +232,7 @@ void disableUpdate()
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=";
+  String httpRequestData = "api_key=API_KEY_HERE";
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
   // Free up resources
@@ -282,7 +282,7 @@ void attendanceMode()
   // Specify content-type header
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   // Data to send with HTTP POST
-  String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=&uid=" + uid;
+  String httpRequestData = "api_key=API_KEY_HERE&uid=" + uid;
   // Send HTTP POST request
   int httpResponseCode = http.POST(httpRequestData);
 
@@ -436,7 +436,7 @@ A:
       // Specify content-type header
       http.addHeader("Content-Type", "application/x-www-form-urlencoded");
       // Data to send with HTTP POST
-      String httpRequestData = "api_key=Y2FudGVlbmNhbXB1el9BUEk=&new_uid=" + uid;
+      String httpRequestData = "api_key=API_KEY_HERE&new_uid=" + uid;
       // Send HTTP POST request
       int httpResponseCode = http.POST(httpRequestData);
 
